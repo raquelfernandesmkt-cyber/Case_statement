@@ -162,12 +162,67 @@ on e.emp_no = s.emp_no;
 select e.emp_no, e.first_name, e.last_name, MAX (s.salary) - MIN (s.salary) as salary_difference, 
 case 
   when max (s.salary) - min (s.salary) > 30000 then 'salary was raised by more than $30,000'
-  when mas (s.salary) - min (s.salary) between 20000 and 30000 then 'salary was raised by more than $20,000 but less than $30,000'
+  when max (s.salary) - min (s.salary) between 20000 and 30000 then 'salary was raised by more than $20,000 but less than $30,000'
   else 'salary was raised by less than $20,000' 
-end as slry_increase 
+end as salary_increase 
 from employees as e 
 join salaries as s 
-on e.emp_no = s.emp_no; 
+on e.emp_no = s.emp_no
+  group by e.emp_no, s.emp_no; 
 
+-- 5.4 Retrieve all the data from the employees and dept_emp tables 
+  select * from employess; 
+  select * from dept_emp; 
 
+--5.5 extract the employee number, first and last name of the first 100 employees, and add a fourth column called "currect_employee" sayint "Is still employed", 
+-- if the employee is still working in the company, or "Not an employee anymore", if they are no longer working in the company. 
+-- Hint: we'll need data from both the 'employees' and 'dept_emp' table to solve this exercise 
+select e.emp_no, e.first_name, e.last_name, 
+case 
+  when max (de.to_date) > current_date then 'Is still employed'
+  else 'Not an employee anymore' 
+end as current_employee 
+from employees as e 
+join dept_emp as de 
+on e.emp_no = de.emp_no 
+group by e.emp_no 
+limit 100; 
+
+--6.1 Retrieve all the data from the sales table 
+select * from sales; 
+
+-- 6.2 retrieve the count of the different profit_category from the sales table 
+select a.profit_categroy, count (*) 
+from (
+  select order_line, profit, 
+  case 
+    when profit < 0 then 'no profit'
+    when profit > 0 and profit < 500 then 'low profit' 
+    when profit > 500 and profit < 1500 then 'good profit' 
+    else 'high profit' 
+end as profit_category 
+  from sales 
+  ) as a 
+group by a.profit_category; 
+
+--6.3 transpose 6.2 above (vertical result) 
+select sum(case when profit is < 0 then 1 else 0 end) as no_profit 
+  sum(case when profit is > 0 and profit < 500 then 1 else 0 end) as low_profit
+  sum(case when profit is > 500 and profit < 1500 then 1 else 0 end) as good_profit
+  sum(case when profit is > 1500  then 1 else 0 end) as high_profit
+from sales; 
+
+-- 6.4 retrieve the number of employees in the first four department in the dept_emp table 
+select dept_no, count (*)
+from dept_emp
+where dept_no in ('d001', 'd002', 'd003', 'd004')
+group by dept_no
+order by dept_no; 
+
+-- 6.5 transpose 6.4 above 
+select sum (case when dept_no = 'd001' then return 1 else 0 end) as dept_one, 
+sum (case when dept_no = 'd002' then return 1 else 0 end) as dept_two, 
+sum (case when dept_no = 'd003' then return 1 else 0 end) as dept_three, 
+sum (case when dept_no = 'd004' then return 1 else 0 end) as dept_four
+from dept_emp; 
 
